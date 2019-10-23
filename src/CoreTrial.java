@@ -2,6 +2,7 @@ import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.Arrays;
@@ -12,12 +13,13 @@ import static java.time.Duration.ofSeconds;
 /**
  * Created by Administrator on 2019/10/23 13:16.
  */
-public class FluxTrial {
+public class CoreTrial {
 
     public static void main(String[] args) {
-        FluxTrial fluxTrial = new FluxTrial();
+        CoreTrial fluxTrial = new CoreTrial();
 
-//        fluxTrial.base();
+//        fluxTrial.flux();
+//        fluxTrial.mono();
 //        fluxTrial.baseSubscriber();
 //        fluxTrial.hot();
         fluxTrial.async();
@@ -25,12 +27,29 @@ public class FluxTrial {
 
     }
 
+    private void mono() {
+
+        //方式一：使用静态方法
+//        Mono.just(1).subscribe(System.out::println);
+
+
+        //方式二：运算结果
+        Mono<Long> mono = Flux.range(1, 5).count();
+        mono.subscribe(System.out::println);
+
+
+    }
+
     private void async() {
         Flux.just(1, 2, 3, 4)
+                .publishOn(Schedulers.parallel())
                 .log()
-                .map(i -> i * 2)
+                .publishOn(Schedulers.parallel())
+                .log()
                 .subscribeOn(Schedulers.parallel())
-                .subscribe(System.out::println);
+                .subscribe(i->{
+                    System.out.println(Thread.currentThread().getName());
+                });
 
         System.out.println("ok");
 
@@ -87,13 +106,18 @@ public class FluxTrial {
 
     }
 
-    private void base() {
+    private void flux() {
 
 
+        //例一：使用Just
         Flux<String> flux = Flux.just("foo", "bar", "foobar");
 
-        List<String> iterable = Arrays.asList("foo", "bar", "foobar");
+        //例二：使用容器
+//        List<String> iterable = Arrays.asList("foo", "bar", "foobar");
 //        Flux<String> flux = Flux.fromIterable(iterable);
+
+
+        flux.subscribe(System.out::println);
 
     }
 }
