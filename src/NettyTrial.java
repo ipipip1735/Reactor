@@ -14,10 +14,10 @@ public class NettyTrial {
 
         NettyTrial nettyTrial = new NettyTrial();
 
-        nettyTrial.tcp();
+        nettyTrial.server();
     }
 
-    private void tcp() {
+    private void server() {
 
         EventLoopGroup group = new NioEventLoopGroup();
 
