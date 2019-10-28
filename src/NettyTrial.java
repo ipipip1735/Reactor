@@ -5,10 +5,12 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.AttributeMap;
+import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
@@ -23,7 +25,69 @@ import java.util.concurrent.TimeoutException;
  */
 public class NettyTrial {
 
-    ChannelInboundHandlerAdapter channelInboundHandlerAdapter = new ChannelInboundHandlerAdapter() {
+    ChannelFuture channelFuture;
+
+    public static void main(String[] args) {
+
+        NettyTrial nettyTrial = new NettyTrial();
+
+        nettyTrial.server();
+
+
+    }
+
+
+    private void server() {
+
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        try {
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap.group(group);
+            serverBootstrap.channel(NioServerSocketChannel.class);
+            serverBootstrap.localAddress(new InetSocketAddress("192.168.0.126", 5454));
+
+            ChannelInitializer<SocketChannel> init = new ChannelInitializer<>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    System.out.println("~~" + getClass().getSimpleName() + ".initChannel~~");
+                    System.out.println("ch is " + ch);
+
+
+//                    ch.pipeline().addLast(new EmptyHandler());//增加空处理器
+//                    ch.pipeline().addLast(new InboundHandler());//增加读处理器
+//                    ch.pipeline().addLast(new EmptyHandler(), new InboundHandler());//使用2个处理器
+                    ch.pipeline().addLast(new StringDecoder());//使用框架自带的解码器
+
+                }
+            };
+
+            serverBootstrap.childHandler(init)
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+
+
+            channelFuture = serverBootstrap.bind().sync();
+            channelFuture.channel()
+                    .closeFuture()
+                    .sync();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                group.shutdownGracefully().sync();
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+
+    class InboundHandler extends ChannelInboundHandlerAdapter {
 
         @Override
         public void handlerAdded(ChannelHandlerContext ctx) {
@@ -46,7 +110,6 @@ public class NettyTrial {
 
 
             ByteBuf byteBuf = (ByteBuf) msg;
-
             while (byteBuf.isReadable()) System.out.println(byteBuf.readByte());
             byteBuf.release();
 
@@ -55,24 +118,16 @@ public class NettyTrial {
             byteBuf = Unpooled.buffer(s.length());
             for (char c : s.toCharArray()) byteBuf.writeChar(c);
 
-            ChannelFuture channelFuture = ctx.writeAndFlush(byteBuf);
+            //方式一：使用自定义处理器
+            ctx.writeAndFlush(byteBuf)
+                    .addListener(future -> ctx.close());//增加监听器，flush()操作后关闭通道
 
-            System.out.println(channelFuture);
-            System.out.println(channelFuture.channel());
-//            channelFuture.addListener(ChannelFutureListener.CLOSE);
-            channelFuture.addListener(future -> {
-                ChannelFuture cf = (ChannelFuture) future;
-                System.out.println(cf .channel());
-                cf.channel().close();
-                ctx.close();
-                System.out.println("closing");
-            });
+            //方式二：使用框架自带处理器
+//            ctx.writeAndFlush(byteBuf)
+//                    .addListener(ChannelFutureListener.CLOSE);
 
 
-//            ctx.flush();
-//            ctx.close().addListener(future -> {
-//                System.out.println("closed");
-//            });
+//          channelFuture.channel().close();//关闭服务端（不再服务，任何通道都不会再建立，结束main()方法）
 
 
         }
@@ -100,10 +155,12 @@ public class NettyTrial {
             System.out.println("~~" + getClass().getSimpleName() + ".channelReadComplete~~");
             System.out.println("ctx is " + ctx);
         }
-    };
+    }
+
+    ;
 
 
-    ChannelInboundHandlerAdapter empty = new ChannelInboundHandlerAdapter() {
+    class EmptyHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void handlerAdded(ChannelHandlerContext ctx) {
             System.out.println("~~empty|" + getClass().getSimpleName() + ".handlerAdded~~");
@@ -144,7 +201,6 @@ public class NettyTrial {
         }
 
 
-
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             System.out.println("~~empty|" + getClass().getSimpleName() + ".exceptionCaught~~");
@@ -152,82 +208,34 @@ public class NettyTrial {
 
         @Override
         public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-            System.out.println("~~empty|" + getClass().getSimpleName() + ".channelReadComplete~~");
             System.out.println("ctx is " + ctx);
 
             ctx.fireChannelReadComplete();
         }
-    };
-
-
-    public static void main(String[] args) {
-
-        NettyTrial nettyTrial = new NettyTrial();
-
-        nettyTrial.server();
     }
 
 
-    private void server() {
+    /**
+     * NIO模式读取数据比较麻烦，因为数据完整性无法保证
+     * 一般要定义一个缓存数据，但框架自带解码器已经做了这方便面的工作
+     */
+    class StringDecoder extends ByteToMessageDecoder {
 
-        EventLoopGroup group = new NioEventLoopGroup();
-
-        try {
-            ServerBootstrap serverBootstrap = new ServerBootstrap();
-            serverBootstrap.group(group);
-            serverBootstrap.channel(NioServerSocketChannel.class);
-            serverBootstrap.localAddress(new InetSocketAddress("192.168.0.127", 5454));
-
-            ChannelInitializer<SocketChannel> init = new ChannelInitializer<>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    System.out.println("~~" + getClass().getSimpleName() + ".initChannel~~");
-                    System.out.println("ch is " + ch);
+        @Override
+        protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+            System.out.println("~~" + getClass().getSimpleName() + ".decode~~");
+            System.out.println("ctx is " + ctx);
+            System.out.println("msg is " + in);
+            System.out.println("out is " + out);
 
 
-
-//                    ch.pipeline().addLast(empty);
-//                    ch.pipeline().addLast(channelInboundHandlerAdapter);
-//                    ch.pipeline().addLast(empty, channelInboundHandlerAdapter);
-                    ch.pipeline().addLast(new MessageToMessageDecoder<Integer>() {
-                        @Override
-                        protected void decode(ChannelHandlerContext ctx, Integer msg, List<Object> out) throws Exception {
-
-                        }
-                    });
-
-                }
-            };
-
-            serverBootstrap.childHandler(init)
-                    .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
-
-
-
-            ChannelFuture channelFuture = serverBootstrap.bind().sync();
-            System.out.println("----------" + channelFuture.channel());
-
-            channelFuture.channel()
-                    .closeFuture()
-                    .addListener(future -> { System.out.println("closed!!"); })
-                    .sync();
-
-
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                group.shutdownGracefully().sync();
-                System.out.println("shutdown Gracefully!");
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            //utf8是变长的，这里的逻辑不知道怎么写，下面是错误的
+            if (in.readableBytes() < 3) {
+                return;
             }
+            out.add(in.readBytes(3));
+
         }
-
-
     }
+
 }
