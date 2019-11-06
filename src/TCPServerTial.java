@@ -13,11 +13,11 @@ public class TCPServerTial {
     public static void main(String[] args) {
         TCPServerTial serverTial = new TCPServerTial();
 
-//        serverTial.server();
+        serverTial.server();
 //        serverTial.request();
 //        serverTial.response();
 
-        serverTial.hook();
+//        serverTial.hook();
     }
 
     private void hook() {

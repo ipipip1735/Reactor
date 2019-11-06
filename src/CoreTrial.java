@@ -21,8 +21,22 @@ public class CoreTrial {
 
 //        coreTrial.create();//创建流
 //        coreTrial.baseSubscriber();//系统自带流
-        coreTrial.hot(); //冷/热模式
+        coreTrial.disposable();//系统自带流
+//        coreTrial.hot(); //冷/热模式
 //        coreTrial.async();
+
+
+    }
+
+    private void disposable() {
+//todo
+//        Disposables.swap()
+//        try
+
+
+        Flux.interval(Duration.ofSeconds(1))
+                .subscribe(System.out::println);
+
 
 
     }
