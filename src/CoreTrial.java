@@ -1,4 +1,6 @@
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.Disposable;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
@@ -6,8 +8,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.time.Duration.ofSeconds;
 
@@ -20,7 +24,7 @@ public class CoreTrial {
         CoreTrial coreTrial = new CoreTrial();
 
 //        coreTrial.create();//创建流
-//        coreTrial.baseSubscriber();//系统自带流
+//        coreTrial.subscriber();//系统自带流
         coreTrial.disposable();//系统自带流
 //        coreTrial.hot(); //冷/热模式
 //        coreTrial.async();
@@ -29,13 +33,31 @@ public class CoreTrial {
     }
 
     private void disposable() {
-//todo
-//        Disposables.swap()
-//        try
 
 
-        Flux.interval(Duration.ofSeconds(1))
+        Disposable disposable = Flux.interval(Duration.ofSeconds(1))
                 .subscribe(System.out::println);
+
+        try {
+            Thread.sleep(3000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        disposable.dispose();
+
+        try {
+            Thread.sleep(3000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+
+
+
+
+
 
 
 
@@ -80,24 +102,62 @@ public class CoreTrial {
 
     }
 
-    private void baseSubscriber() {
+    private void subscriber() {
 
-        BaseSubscriber<String> baseSubscriber = new BaseSubscriber<String>() {
-            public void hookOnSubscribe(Subscription subscription) {
-                System.out.println("~~" + getClass().getSimpleName() + ".hookOnSubscribe~~");
-                System.out.println("Subscribed is " + subscription);
 
-                request(1);
+        //方式一：使用Subscriber
+        Subscriber<Integer> subscriber = new Subscriber<>() {
+            Subscription s;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                System.out.println("~~" + getClass().getSimpleName() + ".onSubscribe~~");
+
+                this.s = s;
+                s.request(Integer.MAX_VALUE);
             }
 
-            public void hookOnNext(String value) {
-                System.out.println("~~" + getClass().getSimpleName() + ".hookOnNext~~");
-                System.out.println("value is " + value);
-                request(1);
+            @Override
+            public void onNext(Integer integer) {
+                System.out.println("~~" + getClass().getSimpleName() + ".onNext~~");
+
+                System.out.println(integer);
+                if(integer > 5) s.cancel();
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("~~" + getClass().getSimpleName() + ".onError~~");
+
+            }
+
+            @Override
+            public void onComplete() {
+                System.out.println("~~" + getClass().getSimpleName() + ".onComplete~~");
+
             }
         };
+        Flux.range(1,10).subscribe(subscriber);
 
-        Flux.just("one", "two", "three").subscribe(baseSubscriber);
+
+
+        //方式二：使用BaseSubscriber
+//        BaseSubscriber<String> baseSubscriber = new BaseSubscriber<String>() {
+//            public void hookOnSubscribe(Subscription subscription) {
+//                System.out.println("~~" + getClass().getSimpleName() + ".hookOnSubscribe~~");
+//                System.out.println("Subscribed is " + subscription);
+//
+//                request(1);
+//            }
+//
+//            public void hookOnNext(String value) {
+//                System.out.println("~~" + getClass().getSimpleName() + ".hookOnNext~~");
+//                System.out.println("value is " + value);
+//                request(1);
+//            }
+//        };
+//        Flux.just("one", "two", "three").subscribe(baseSubscriber);
 
 
     }
