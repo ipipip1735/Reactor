@@ -25,9 +25,88 @@ public class CoreTrial {
 
 //        coreTrial.create();//创建流
 //        coreTrial.subscriber();//系统自带流
-        coreTrial.disposable();//系统自带流
+//        coreTrial.disposable();//系统自带流
 //        coreTrial.hot(); //冷/热模式
 //        coreTrial.async();
+
+        coreTrial.flux();
+//        coreTrial.mono();
+
+
+    }
+
+    private void flux() {
+
+
+//        block();
+
+        flatMap();//构建另外的流
+
+
+    }
+
+    private void flatMap() {
+
+
+        Flux.just(1, 2, 3, 4)
+                .flatMap(integer -> {
+                    return Flux.just(integer, integer * 2);
+                })
+                .subscribe(System.out::println);
+
+
+    }
+
+    private void block() {
+        //阻塞操作
+//        long l = Flux.interval(Duration.ofSeconds(1))
+//                .log()
+//                .take(5)
+//                .blockLast();
+//        System.out.println(l);
+
+
+        //非阻塞方式
+//        Flux.interval(Duration.ofSeconds(1))
+//                .take(5)
+//        .subscribe(System.out::println);
+//
+//        try {
+//            Thread.sleep(6000L);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+
+    /**
+     * Mono代表单值流
+     */
+    private void mono() {
+
+        //方式一：延迟发送单值
+//        Mono.just(1)
+//                .delayElement(Duration.ofSeconds(3))
+//                .subscribe(System.out::println);
+//        try {
+//            Thread.sleep(5000L);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
+
+        //方式二
+        Integer i = Mono.just(1)
+                .delayElement(Duration.ofSeconds(3))
+                .block();
+        System.out.println(i);
+
+
+//        long l = Mono.just(1)
+//                .delay(Duration.ofSeconds(2))
+//                .block();
+//
+//        System.out.println(l);
 
 
     }
@@ -51,14 +130,6 @@ public class CoreTrial {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-
-
-
-
-
-
-
 
 
     }
@@ -122,7 +193,7 @@ public class CoreTrial {
                 System.out.println("~~" + getClass().getSimpleName() + ".onNext~~");
 
                 System.out.println(integer);
-                if(integer > 5) s.cancel();
+                if (integer > 5) s.cancel();
 
             }
 
@@ -138,8 +209,7 @@ public class CoreTrial {
 
             }
         };
-        Flux.range(1,10).subscribe(subscriber);
-
+        Flux.range(1, 10).subscribe(subscriber);
 
 
         //方式二：使用BaseSubscriber
@@ -171,7 +241,6 @@ public class CoreTrial {
         //方式二
         List<String> iterable = Arrays.asList("foo", "bar", "foobar");
 //        Flux<String> flux = Flux.fromIterable(iterable);
-
 
 
         //创建单值发布者
