@@ -1,36 +1,35 @@
+package core;
+
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.Disposable;
-import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.time.Duration.ofSeconds;
 
 /**
  * Created by Administrator on 2019/10/23 13:16.
  */
-public class CoreTrial {
+public class FluxTrial {
 
     public static void main(String[] args) {
-        CoreTrial coreTrial = new CoreTrial();
+        FluxTrial fluxTrial = new FluxTrial();
 
-//        coreTrial.create();//创建流
-//        coreTrial.subscriber();//系统自带流
-//        coreTrial.disposable();//系统自带流
-//        coreTrial.hot(); //冷/热模式
-//        coreTrial.async();
+//        fluxTrial.create();//创建流
+//        fluxTrial.subscriber();//系统自带流
+//        fluxTrial.disposable();//系统自带流
+//        fluxTrial.hot(); //冷/热模式
+//        fluxTrial.async();
 
-        coreTrial.flux();
-//        coreTrial.mono();
+        fluxTrial.flux();
+//        fluxTrial.mono();
 
 
     }

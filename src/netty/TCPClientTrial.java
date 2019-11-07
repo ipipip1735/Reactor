@@ -1,23 +1,23 @@
+package netty;
+
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
-import reactor.netty.NettyInbound;
 import reactor.netty.tcp.TcpClient;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
 /**
  * Created by Administrator on 2019/10/24 10:47.
  */
-public class TCPClient {
+public class TCPClientTrial {
 
     public static void main(String[] args) {
 
-        TCPClient tcpClient = new TCPClient();
+        TCPClientTrial tcpClient = new TCPClientTrial();
 
 //        tcpClient.urlConn();
         tcpClient.conn();
