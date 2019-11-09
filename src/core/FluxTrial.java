@@ -10,6 +10,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -27,47 +28,221 @@ public class FluxTrial {
     public static void main(String[] args) {
         FluxTrial fluxTrial = new FluxTrial();
 
-//        fluxTrial.create();//创建流
-//        fluxTrial.operate();
-//        fluxTrial.result();
+//        fluxTrial.create();//创建多值流
+//        fluxTrial.from();//创建多值流
+//        fluxTrial.push();//创建多值流
+//        fluxTrial.generate();//创建无限流
+//        fluxTrial.never();//创建空流
+//        fluxTrial.range();//创建流
+//        fluxTrial.just();//创建单值流
+
+
+//        fluxTrial.delay();//延迟发送
+//        fluxTrial.block();//阻塞操作
+
+
+//        fluxTrial.handle();//处理流中的元素
+//        fluxTrial.buffer();//缓存多个元素，封装为List再发送，逆操作是flatMap()，分解元素为流，再发送，
+
+//        fluxTrial.merge();//无序合并
+//        fluxTrial.flatMap();//处理后无序合并
+//        fluxTrial.concat();//有序合并
+//        fluxTrial.concatMap();//处理后有序合并
+
+
+//        fluxTrial.count();//计算元素个数
+
+
 //        fluxTrial.subscriber();//系统自带流
 //        fluxTrial.disposable();//系统自带流
 //        fluxTrial.hot(); //冷/热模式
 //        fluxTrial.async();
 
-//        fluxTrial.block();
-//        fluxTrial.flatMap();
-        fluxTrial.hooks();
 
+//        fluxTrial.hooks();
 
     }
 
-    private void operate() {
-        //handle()
-//        Flux.just(1,2,3,4,5)
-//                .handle((integer, synchronousSink) -> {
-//                    System.out.println("~~handle~~");
-//                    System.out.println(integer);
-//                    synchronousSink.next(integer);
-//                })
-//        .subscribe(i-> System.out.println("subscribe|" + i));
+
+    private void concat() {
+
+        //方式一
+//        Flux.concat(Flux.just(1, 3, 5), Flux.just(2, 4, 6))
+//                .subscribe(System.out::println);
 
 
-        //buffer()
+        //方式二
+        Flux<Integer> flux1 = Flux.just(1, 3, 5).delayElements(Duration.ofMillis(100));
+        Flux<Integer> flux2 = Flux.just(2, 4, 6).delayElements(Duration.ofMillis(100));
+        Flux.concat(flux1, flux2)
+                .subscribe(System.out::println);
+
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void delay() {
+
+        Flux.just(1, 2, 3, 4)
+//                .delaySequence(Duration.ofMillis(100))
+                .delayElements(Duration.ofMillis(100))
+                .subscribe(System.out::println);
+
+        System.out.println("end");
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void merge() {
+
+        //方式一
+//        Flux.merge(Flux.just(1, 3, 5), Flux.just(2, 4, 6))
+//                .subscribe(System.out::println);
+
+
+        //方式二
+        Flux<Integer> flux1 = Flux.just(1, 3, 5).delayElements(Duration.ofMillis(100));
+        Flux<Integer> flux2 = Flux.just(2, 4, 6).delayElements(Duration.ofMillis(100));
+        Flux.merge(flux1, flux2)
+                .subscribe(System.out::println);
+
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void buffer() {
         Flux.just(1, 2, 3, 4, 5)
                 .buffer()
                 .subscribe(integers -> {
                     System.out.println(integers);
                 });
+    }
+
+    private void from() {
+
+        //方式一
+        Publisher<Integer> publisher = new Publisher<>() {
+            @Override
+            public void subscribe(Subscriber<? super Integer> s) {
+                for (int i = 0; i < 10; i++) s.onNext(i);
+            }
+        };
+        Flux.from(publisher)
+                .subscribe(System.out::println);
+
+
+        //方式二
+//        List<String> iterable = Arrays.asList("foo", "bar", "foobar");
+//        Flux.fromIterable(iterable)
+//                .subscribe(System.out::println);
 
     }
 
-    private void result() {
+    private void just() {
+        //有限制流
+        Flux.just("foo", "bar", "foobar")
+                .subscribe(System.out::println);
+    }
 
-        //count()
-//        Mono<Long> mono = Flux.just("foo", "bar", "foobar").count();
+    private void range() {
+        //取值范围
+        Flux.range(1, 5)
+                .subscribe(System.out::println);
+
+    }
+
+    private void never() {
+        //空流
+        Flux.never()
+                .subscribe(System.out::println);
+    }
+
+    private void generate() {
+
+        Flux.generate((SynchronousSink<Integer> synchronousSink) -> {
+            synchronousSink.next(1);
+        }).map(integer -> integer + 1)
+                .subscribe(System.out::println);
+
+    }
+
+    private void push() {
 
 
+        Flux.create(emitter -> {
+//        Flux.push(emitter -> {
+            //第一个线程中发送
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < 10; i++) {
+                        emitter.next(i);
+                        try {
+                            Thread.sleep(100L);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
+
+            //第二个线程中发送
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 10; i < 20; i++) {
+                        emitter.next(i);
+                        try {
+                            Thread.sleep(100L);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
+        }).subscribe(System.out::println);
+
+    }
+
+    private void concatMap() {
+
+        Flux.just(1, 2, 3, 4, 5)
+                .flatMap(i -> {//flatMap()合并时使用merge() ，即无序异步操作
+//                .concatMap(i -> {//concatMap()合并时使用concat()，即有序同步操作
+                    return Flux.just("one" + i, "two" + i, "three" + i, "four" + i)
+                            .delayElements(Duration.ofMillis(100));
+                }).subscribe(i -> System.out.println("subscribe|" + i));
+
+        try {
+            Thread.sleep(3000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handle() {
+        Flux.just(1, 2, 3, 4, 5)
+                .handle((integer, synchronousSink) -> {
+                    System.out.println("~~handle~~");
+                    System.out.println(integer);
+                    synchronousSink.next(integer);
+                })
+                .subscribe(i -> System.out.println("subscribe|" + i));
+    }
+
+    private void count() {
+        Mono<Long> mono = Flux.just("foo", "bar", "foobar")
+                .count();
     }
 
     private void hooks() {
@@ -99,16 +274,6 @@ public class FluxTrial {
 //                })
 //        .subscribe(System.out::println);
 
-        Flux.just(1,2,3,4,5,6)
-                .doOnNext(integer ->
-                        System.out.println("doOnNext|" + integer))
-                .subscribe(System.out::println);
-
-
-
-
-
-
 
     }
 
@@ -117,10 +282,16 @@ public class FluxTrial {
 
         Flux.just(1, 2, 3, 4)
                 .flatMap(integer -> {
-                    return Flux.just(integer, integer * 2);
+                    return Flux.just(integer, integer * 2)
+                            .delayElements(Duration.ofMillis(100));
                 })
                 .subscribe(System.out::println);
 
+        try {
+            Thread.sleep(1000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -273,116 +444,6 @@ public class FluxTrial {
 //        Flux.create(emitter -> {
 //            for (int i = 0; i < 10; i++) emitter.next(i);
 //        }).subscribe(System.out::println);
-
-//        Flux.push(emitter -> {
-//            for (int i = 0; i < 10; i++) emitter.next(i);
-//        }).subscribe(System.out::println);
-
-
-//        Flux.generate((SynchronousSink<Integer> synchronousSink) -> {
-//            synchronousSink.next(1);
-//        }).map(integer -> integer + 1 )
-//                .subscribe(System.out::println);
-
-
-        //空流
-//        Flux.never()
-//        .subscribe(System.out::println);
-
-
-        //取值范围
-//        Flux.range(1,5)
-//                .subscribe(System.out::println);
-
-
-        //有限制流
-//        Flux.just("foo", "bar", "foobar")
-//                .subscribe(System.out::println);
-
-
-        //from()
-//        Publisher<Integer> publisher = new Publisher<>() {
-//            @Override
-//            public void subscribe(Subscriber<? super Integer> s) {
-//                for (int i = 0; i < 10; i++) s.onNext(i);
-//            }
-//        };
-//        Flux.from(publisher)
-//                .subscribe(System.out::println);
-
-
-//        List<String> iterable = Arrays.asList("foo", "bar", "foobar");
-//        Flux.fromIterable(iterable)
-//                .subscribe(System.out::println);
-
-
-        //与最后元素逐一合并
-//        Publisher<Integer> source1 = Flux.just(1, 3, 5);
-//        Publisher<Integer> source2 = Flux.just(2, 4, 6);
-//        Flux.combineLatest(objects -> {
-//            for (Object o : objects) System.out.println(o);
-//            return Integer.valueOf(-1);
-//        }, source1, source2)
-//                .subscribe(System.out::println);
-
-
-        //串联
-//        Flux.concat(Flux.just(1, 3, 5), Flux.just(2, 4, 6))
-//                .subscribe(System.out::println);
-
-
-        //using
-//        Callable<Integer> callable = new Callable<Integer>() {
-////            @Override
-////            public Integer call() throws Exception {
-////                System.out.println("~~call~~");
-////                return Integer.valueOf(1);
-////            }
-////        };
-////
-////        Function<Integer, Publisher<String>> sourceSupplier =
-////                new Function<Integer, Publisher<String>>() {
-////            @Override
-////            public Publisher<String> apply(Integer integer) {
-////                System.out.println("~~apply~~");
-////                System.out.println(integer);
-////                return Flux.just(integer + "-one");
-////            }
-////        };
-////
-////        Consumer<Integer> consumer = new Consumer<Integer>() {
-////            @Override
-////            public void accept(Integer integer) {
-////                System.out.println("~~accept~~");
-////                System.out.println(integer);
-////            }
-////        };
-////
-////        Flux.using(callable, sourceSupplier, consumer)
-////                .subscribe(s -> {
-////                    System.out.println("subscribe is " + s);
-////                });
-
-
-        //zip()
-        Function<Object[], Integer> combinator = new Function<Object[], Integer>() {
-            @Override
-            public Integer apply(Object[] objects) {
-                System.out.println("~~apply~~");
-                for (Object o : objects) System.out.println(o);
-                return Integer.valueOf(11);
-            }
-        };
-
-        Publisher<String> publisher1 = Flux.just("11", "22", "33", "44", "55", "66");
-        Publisher<String> publisher2 = Flux.just("one", "two", "three", "four", "five");
-        Publisher<String> publisher3 = Flux.just("aaa", "bbb", "ccc", "ddd", "fff", "ggg");
-
-        Flux.zip(combinator, publisher1, publisher2, publisher3)
-                .subscribe(s -> {
-                    System.out.println("[subscribe]" + s);
-                });
-
 
     }
 }
