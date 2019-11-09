@@ -7,13 +7,15 @@ import reactor.netty.tcp.TcpServer;
 
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.util.CharsetUtil.UTF_8;
+
 /**
  * Created by Administrator on 2019/10/24 8:14.
  */
 public class TCPServerTial {
 
 
-    String ip = "192.168.0.126";
+    String ip = "192.168.0.127";
     int port = 5454;
 
     public static void main(String[] args) {
@@ -107,9 +109,10 @@ public class TCPServerTial {
                 .port(port)
                 .handle((inbound, outbound) ->
                         inbound.receive()
-                                .asString()
-                                .then()
-                )
+                                .doOnNext(byteBuf -> {
+                                    System.out.println(UTF_8.decode(byteBuf.nioBuffer()));
+                                })
+                        .then())
                 .bindNow();
 
         server.onDispose()

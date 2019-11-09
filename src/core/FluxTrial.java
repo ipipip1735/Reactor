@@ -38,7 +38,7 @@ public class FluxTrial {
 
 
 //        fluxTrial.delay();//延迟发送
-//        fluxTrial.block();//阻塞操作
+        fluxTrial.block();//阻塞操作
 
 
 //        fluxTrial.handle();//处理流中的元素
@@ -308,7 +308,6 @@ public class FluxTrial {
 //        Flux.interval(Duration.ofSeconds(1))
 //                .take(5)
 //        .subscribe(System.out::println);
-//
 //        try {
 //            Thread.sleep(6000L);
 //        } catch (InterruptedException e) {
