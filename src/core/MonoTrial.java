@@ -12,7 +12,22 @@ public class MonoTrial {
     public static void main(String[] args) {
         MonoTrial monoTrial = new MonoTrial();
 
-        monoTrial.create();
+//        monoTrial.create();
+        monoTrial.never();
+    }
+
+    private void never() {
+
+        Mono.never()
+                .doOnNext( s->{
+                    System.out.println("~~doOnNext~~");
+                    System.out.println(s);
+                })
+        .subscribe(s-> {
+                    System.out.println("~~subscribe~~");
+            System.out.println(s);
+        });
+
     }
 
     private void create() {

@@ -1,11 +1,13 @@
 package netty;
 
+import io.netty.buffer.Unpooled;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.ByteBufFlux;
 import reactor.netty.DisposableServer;
 import reactor.netty.tcp.TcpServer;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.util.CharsetUtil.UTF_8;
@@ -13,14 +15,14 @@ import static io.netty.util.CharsetUtil.UTF_8;
 /**
  * Created by Administrator on 2019/10/24 8:14.
  */
-public class TCPServerTial {
+public class TCPServerTrial {
 
 
-    String ip = "192.168.0.126";
+    String ip = "192.168.0.127";
     int port = 5454;
 
     public static void main(String[] args) {
-        TCPServerTial serverTial = new TCPServerTial();
+        TCPServerTrial serverTial = new TCPServerTrial();
 
         serverTial.server();
 //        serverTial.request();
@@ -76,8 +78,9 @@ public class TCPServerTial {
 
     private void server() {
 
-        read();
+//        read();
 //        write();
+        rw();
 
     }
 
@@ -87,15 +90,9 @@ public class TCPServerTial {
                 .host(ip)
                 .port(port)
                 .handle((inbound, outbound) ->
-                        inbound.receive()
-                                .map(byteBuf -> {
-                                    System.out.println(byteBuf);
-                                    return outbound.sendString(Mono.just("ok"));
-                                })
-                                .then()
-                )
-//                .handle((inbound, outbound) ->
-//                        outbound.sendObject(Unpooled.wrappedBuffer(UTF_8.encode("ok"))))
+                        outbound.sendObject(Unpooled.wrappedBuffer(UTF_8.encode("ok")))
+                .neverComplete())
+                .wiretap(true)
                 .bindNow();
 
         server.onDispose()
@@ -120,7 +117,6 @@ public class TCPServerTial {
                 .bindNow();
         server.onDispose()
                 .block();
-
 
 
         //方式二
@@ -150,14 +146,25 @@ public class TCPServerTial {
         DisposableServer server = TcpServer.create()
                 .host(ip)
                 .port(port)
-                .handle((inbound, outbound) ->
-                        inbound.receive()
-                                .map(byteBuf -> {
-                                    System.out.println(byteBuf);
-                                    return outbound.sendString(Mono.just("ok"));
-                                })
-                                .then()
-                )
+                .handle((inbound, outbound) -> {
+                    System.out.println("~~handle~~");
+                    return inbound.receive()
+                            .doOnNext(byteBuf -> {
+                                System.out.println(byteBuf);
+                                outbound.sendObject(Unpooled.wrappedBuffer("ok".getBytes()))
+                                        .then();
+
+                            })
+                            .then();
+
+                })
+//                .handle((inbound, outbound) -> {
+//                            System.out.println("~~handleW~~");
+//                            return outbound.sendString(Mono.just("ok"))
+//                                    .neverComplete().then();
+//                        }
+//                )
+                .wiretap(true)
                 .bindNow();
 
         server.onDispose()
