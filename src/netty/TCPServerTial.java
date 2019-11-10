@@ -2,6 +2,7 @@ package netty;
 
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import reactor.core.publisher.Mono;
+import reactor.netty.ByteBufFlux;
 import reactor.netty.DisposableServer;
 import reactor.netty.tcp.TcpServer;
 
@@ -15,7 +16,7 @@ import static io.netty.util.CharsetUtil.UTF_8;
 public class TCPServerTial {
 
 
-    String ip = "192.168.0.127";
+    String ip = "192.168.0.126";
     int port = 5454;
 
     public static void main(String[] args) {
@@ -78,7 +79,6 @@ public class TCPServerTial {
         read();
 //        write();
 
-
     }
 
     private void write() {
@@ -104,19 +104,45 @@ public class TCPServerTial {
 
     private void read() {
 
+        //方式一
         DisposableServer server = TcpServer.create()
                 .host(ip)
                 .port(port)
-                .handle((inbound, outbound) ->
-                        inbound.receive()
-                                .doOnNext(byteBuf -> {
-                                    System.out.println(UTF_8.decode(byteBuf.nioBuffer()));
-                                })
-                        .then())
-                .bindNow();
+                .handle((inbound, outbound) -> {
+                    return inbound.receive().doOnNext(byteBuf -> {
+                        System.out.println(byteBuf);
+                        while (byteBuf.isReadable()) System.out.println(byteBuf.readByte());
+                        System.out.println(UTF_8.decode(byteBuf.readerIndex(0).nioBuffer()));
+                    })
+                            .then();
 
+                })
+                .bindNow();
         server.onDispose()
                 .block();
+
+
+
+        //方式二
+//        DisposableServer server = TcpServer.create()
+//                .host(ip)
+//                .port(port)
+//                .handle((inbound, outbound) -> {
+//                    ByteBufFlux byteBufFlux = inbound.receive();
+//
+//                    byteBufFlux.doOnNext(byteBuf -> {
+//                        System.out.println(byteBuf);
+//                        while (byteBuf.isReadable()) System.out.println(byteBuf.readByte());
+//                        System.out.println(UTF_8.decode(byteBuf.readerIndex(0).nioBuffer()));
+//                    });
+//
+//                    return byteBufFlux.then();
+////                    return Mono.<Void>never();
+//                })
+//                .bindNow();
+//
+//        server.onDispose()
+//                .block();
     }
 
     private void rw() {

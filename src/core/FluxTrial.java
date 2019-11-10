@@ -28,7 +28,7 @@ public class FluxTrial {
     public static void main(String[] args) {
         FluxTrial fluxTrial = new FluxTrial();
 
-//        fluxTrial.create();//创建多值流
+        fluxTrial.create();//创建多值流
 //        fluxTrial.from();//创建多值流
 //        fluxTrial.push();//创建多值流
 //        fluxTrial.generate();//创建无限流
@@ -38,7 +38,7 @@ public class FluxTrial {
 
 
 //        fluxTrial.delay();//延迟发送
-        fluxTrial.block();//阻塞操作
+//        fluxTrial.block();//阻塞操作
 
 
 //        fluxTrial.handle();//处理流中的元素
@@ -48,6 +48,7 @@ public class FluxTrial {
 //        fluxTrial.flatMap();//处理后无序合并
 //        fluxTrial.concat();//有序合并
 //        fluxTrial.concatMap();//处理后有序合并
+//        fluxTrial.ofType();//过滤类型，保留匹配类型的元素
 
 
 //        fluxTrial.count();//计算元素个数
@@ -61,6 +62,12 @@ public class FluxTrial {
 
 //        fluxTrial.hooks();
 
+    }
+
+    private void ofType() {
+        Flux.<Object>just(11, "two", 33, "four")
+                .ofType(String.class)
+                .subscribe(System.out::println);
     }
 
 
@@ -440,9 +447,43 @@ public class FluxTrial {
     private void create() {
 
         //创建流
-//        Flux.create(emitter -> {
-//            for (int i = 0; i < 10; i++) emitter.next(i);
+//        Flux.create(fluxSink -> {
+//            for (int i = 0; i < 10; i++) fluxSink.next(i);
 //        }).subscribe(System.out::println);
+
+
+        //钩子函数
+        Disposable disposable = null;
+
+        disposable = Flux.<Integer>create(fluxSink -> {
+            new Thread(() -> {
+
+                for (int i = 0; i < 10; i++) {
+
+                    try {
+                        fluxSink.next(i);
+                        Thread.sleep(100L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }).start();
+
+            fluxSink.onDispose(() -> System.out.println("~~onDispose~~"));
+            fluxSink.onCancel(() -> System.out.println("~~onCancel~~"));
+        })
+                .doOnCancel(() -> System.out.println("~~doOnCancel~~"))
+                .subscribe(System.out::println);
+
+
+        try {
+            Thread.sleep(500L);
+            disposable.dispose();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 }
