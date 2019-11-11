@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.FixedLengthFrameDecoder;
@@ -26,8 +28,16 @@ import static io.netty.util.CharsetUtil.UTF_8;
 public class TCPServerTrial {
 
 
-    String ip = "192.168.0.126";
+    String ip = "192.168.0.127";
     int port = 5454;
+    ChannelInitializer<SocketChannel> init = new ChannelInitializer<>() {
+        @Override
+        protected void initChannel(SocketChannel ch) throws Exception {
+            System.out.println("~~initChannel~~");
+            ByteBuf delimiter = Unpooled.wrappedBuffer("o".getBytes());
+            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
+        }
+    };
 
     public static void main(String[] args) {
         TCPServerTrial serverTial = new TCPServerTrial();
@@ -39,26 +49,31 @@ public class TCPServerTrial {
 
     private void config() {
 
+//        EventLoopGroup eventLoopGroup = new EpollEventLoopGroup();
 
+
+        System.out.println(init);
+
+
+        //方式一
         TcpServer.create()
 //                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+//                .runOn(eventLoopGroup)
+
                 .bootstrap(serverBootstrap -> {
                     System.out.println("~~bootstrap~~");
                     System.out.println(serverBootstrap);
 
-                    ChannelInitializer<SocketChannel> init = new ChannelInitializer<>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) throws Exception {
-                            System.out.println("~~initChannel~~");
-                            ByteBuf delimiter = Unpooled.wrappedBuffer("o".getBytes());
-                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
-                        }
-                    };
+
 
                     serverBootstrap.childHandler(init);
                     System.out.println(serverBootstrap);
 
                     return serverBootstrap;
+                })
+                .doOnBind(serverBootstrap -> {
+                    System.out.println("~~doOnBind~~");
+                    System.out.println(serverBootstrap);
                 })
                 .host(ip)
                 .port(port)
@@ -72,6 +87,38 @@ public class TCPServerTrial {
                 .bindNow()
                 .onDispose()
                 .block();
+
+
+        //方式二
+//        TcpServer.create()
+//                .doOnBind(serverBootstrap -> {
+//                    System.out.println("~~doOnBind~~");
+//                    System.out.println(serverBootstrap);
+//
+//                    ChannelInitializer<SocketChannel> init = new ChannelInitializer<>() {
+//                        @Override
+//                        protected void initChannel(SocketChannel ch) throws Exception {
+//                            System.out.println("~~initChannel~~");
+//                            ByteBuf delimiter = Unpooled.wrappedBuffer("o".getBytes());
+//                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
+//                        }
+//                    };
+//
+//                    serverBootstrap.childHandler(init);
+//                    System.out.println(serverBootstrap);
+//                })
+//                .host(ip)
+//                .port(port)
+//                .handle((inbound, outbound) ->
+//                        inbound.receive()
+//                                .doOnNext(byteBuf -> {
+//                                    System.out.println("~~doOnNext~~");
+//                                    System.out.println(byteBuf);
+//                                })
+//                                .then())
+//                .bindNow()
+//                .onDispose()
+//                .block();
 
     }
 
