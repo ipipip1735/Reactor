@@ -10,5 +10,6 @@
     <orderEntry type="library" name="io.projectreactor:reactor-core:3.3.0.RELEASE" level="application" />
     <orderEntry type="library" name="io.projectreactor.netty:reactor-netty:0.9.0.RELEASE" level="application" />
     <orderEntry type="library" name="io.netty:netty-all:4.1.42.Final" level="application" />
+    <orderEntry type="library" name="io.netty:netty-all:4.1.39.Final" level="application" />
   </component>
 </module>

@@ -1,5 +1,6 @@
 package netty;
 
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelInitializer;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.DisposableServer;
+import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.tcp.TcpServer;
 
 import java.lang.reflect.Field;
@@ -28,16 +30,8 @@ import static io.netty.util.CharsetUtil.UTF_8;
 public class TCPServerTrial {
 
 
-    String ip = "192.168.0.127";
+    String ip = "192.168.0.126";
     int port = 5454;
-    ChannelInitializer<SocketChannel> init = new ChannelInitializer<>() {
-        @Override
-        protected void initChannel(SocketChannel ch) throws Exception {
-            System.out.println("~~initChannel~~");
-            ByteBuf delimiter = Unpooled.wrappedBuffer("o".getBytes());
-            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
-        }
-    };
 
     public static void main(String[] args) {
         TCPServerTrial serverTial = new TCPServerTrial();
@@ -49,31 +43,61 @@ public class TCPServerTrial {
 
     private void config() {
 
-//        EventLoopGroup eventLoopGroup = new EpollEventLoopGroup();
-
-
-        System.out.println(init);
-
 
         //方式一
         TcpServer.create()
-//                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 2000)
 //                .runOn(eventLoopGroup)
 
-                .bootstrap(serverBootstrap -> {
+                .bootstrap(serverBootstrap -> { //配置serverBootstrap
                     System.out.println("~~bootstrap~~");
                     System.out.println(serverBootstrap);
 
-
-
-                    serverBootstrap.childHandler(init);
-                    System.out.println(serverBootstrap);
-
+//                    serverBootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
                     return serverBootstrap;
+
                 })
                 .doOnBind(serverBootstrap -> {
                     System.out.println("~~doOnBind~~");
                     System.out.println(serverBootstrap);
+
+
+//                    BootstrapHandlers.updateConfiguration(serverBootstrap, "oo",
+//                            (connectionObserver, channel) -> {
+//                                System.out.println("~~update~~");
+//                                System.out.println(connectionObserver);
+//
+//                                ByteBuf delimiter = Unpooled.wrappedBuffer("o".getBytes());
+//                                channel.pipeline()
+//                                        .addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
+//                            });
+
+
+                })
+                .doOnBound(disposableServer -> {
+                    System.out.println("~~doOnBound~~");
+
+                    System.out.println(disposableServer);
+                    System.out.println(disposableServer.channel().pipeline());
+
+
+                })
+                .doOnConnection(connection -> {
+                    System.out.println("~~doOnConnection~~");
+
+                    System.out.println(connection);
+//                    connection.
+
+//                    connection.addHandler(init);
+//                    ByteBuf delimiter = Unpooled.wrappedBuffer("o".getBytes());
+//                    connection.addHandlerLast(new DelimiterBasedFrameDecoder(1024, delimiter));
+
+//                    ServerBootstrap sb = new ServerBootstrap()
+//                            .childHandler(init);
+//
+//                    BootstrapHandlers.updateConfiguration(sb, "user", (connectionObserver, channel) -> {
+//                        System.out.println("~~Listen~~");
+//                    });
                 })
                 .host(ip)
                 .port(port)
