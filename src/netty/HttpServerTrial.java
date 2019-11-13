@@ -1,5 +1,6 @@
 package netty;
 
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServer;
 
@@ -16,14 +17,40 @@ public class HttpServerTrial {
 
     public static void main(String[] args) {
         HttpServerTrial httpServerTrial = new HttpServerTrial();
-        httpServerTrial.request();
+//        httpServerTrial.request();
+        httpServerTrial.response();
+    }
+
+    private void response() {
+
+        HttpServer.create()
+                .host(host)
+                .port(port)
+                .route(httpServerRoutes ->
+                    httpServerRoutes.get("/test/{p}", (request, response) -> {
+
+
+
+                        return response.addCookie(new DefaultCookie("xx", "yy"))
+                        .addHeader("xx", "yy")
+                        .chunkedTransfer(true)
+                        .compression(true)
+                        .keepAlive(true)
+                        .sendString(Mono.just("ok")).then();
+                    })
+                )
+                .bindNow()
+                .onDispose()
+                .block();
+
+
     }
 
     private void request() {
 
         HttpServer.create()
-//                .host(host)
-                .host(ip)
+                .host(host)
+//                .host(ip)
                 .port(port)
                 .route(routes ->
                         routes.get("/test/{param}", (request, response) -> {
@@ -35,7 +62,6 @@ public class HttpServerTrial {
                                     System.out.println("requestHeaders is " + request.requestHeaders());
                                     System.out.println(request.params());
 
-
                                     System.out.println("cookies is " + request.cookies());
                                     System.out.println("isKeepAlive is " + request.isKeepAlive());
                                     System.out.println("isWebsocket is " + request.isWebsocket());
@@ -43,7 +69,6 @@ public class HttpServerTrial {
                                     System.out.println("path is " + request.path());
                                     System.out.println("uri is " + request.uri());
                                     System.out.println("version is " + request.version());
-
 
                                     System.out.println("-------------");
 
@@ -61,16 +86,20 @@ public class HttpServerTrial {
                                     });
 
 
+                                    System.out.println("-------------");
 
+                                    request.receive()
+                                            .doOnNext(byteBuf -> {
+                                                System.out.println("~~doOnNext~~");
+                                                System.out.println(byteBuf);
+                                            });
 
+                                    request.receiveObject()
+                                            .doOnNext(byteBuf -> {
+                                                System.out.println("~~doOnNext~~");
+                                                System.out.println(byteBuf);
+                                            });
 
-
-
-//                                    request.receive()
-//                                            .doOnNext(byteBuf -> {
-//                                                System.out.println("~~doOnNext~~");
-//                                                System.out.println(byteBuf);
-//                                            });
 
 
                                     return response.sendString(Mono.just("ok")).then();
