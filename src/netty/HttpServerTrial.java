@@ -1,13 +1,17 @@
 package netty;
 
+import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServer;
+
+import java.util.HashMap;
 
 /**
  * Created by Administrator on 2019/11/11 4:41.
  */
 public class HttpServerTrial {
 
-    String ip = "192.168.0.127";
+    String host = "localhost";
+    String ip = "192.168.0.126";
     int port = 8080;
 
     public static void main(String[] args) {
@@ -17,22 +21,63 @@ public class HttpServerTrial {
 
     private void request() {
 
-        HttpServer.create()   // Prepares an HTTP server ready for configuration
+        HttpServer.create()
+//                .host(host)
                 .host(ip)
-                .port(port)    // Configures the port number as zero, this will let the system pick up
-                // an ephemeral port when binding the server
+                .port(port)
                 .route(routes ->
-                        // The server will respond only on POST requests
-                        // where the path starts with /test and then there is path parameter
-                        routes.get("/test/{param}", (request, response) ->
-                                response.sendString(request.receive()
-                                        .asString()
-                                        .map(s -> s + ' ' + request.param("param") + '!')
-                                        .log("http-server"))))
+                        routes.get("/test/{param}", (request, response) -> {
+
+                                    System.out.println("hostAddress is " + request.hostAddress());
+                                    System.out.println("scheme is " + request.scheme());
+                                    System.out.println("param is " + request.param("param"));
+                                    System.out.println("remoteAddress is " + request.remoteAddress());
+                                    System.out.println("requestHeaders is " + request.requestHeaders());
+                                    System.out.println(request.params());
+
+
+                                    System.out.println("cookies is " + request.cookies());
+                                    System.out.println("isKeepAlive is " + request.isKeepAlive());
+                                    System.out.println("isWebsocket is " + request.isWebsocket());
+                                    System.out.println("method is " + request.method());
+                                    System.out.println("path is " + request.path());
+                                    System.out.println("uri is " + request.uri());
+                                    System.out.println("version is " + request.version());
+
+
+                                    System.out.println("-------------");
+
+                                    request.paramsResolver(s -> {
+                                        System.out.println("paramsResolver is " + s);
+                                        return new HashMap<>();
+                                    });
+
+                                    request.receiveContent().doOnNext(httpContent -> {
+                                        System.out.println("receiveContent is " + httpContent);
+                                    });
+
+                                    request.withConnection(connection -> {
+                                        System.out.println("connection is " + connection);
+                                    });
+
+
+
+
+
+
+
+//                                    request.receive()
+//                                            .doOnNext(byteBuf -> {
+//                                                System.out.println("~~doOnNext~~");
+//                                                System.out.println(byteBuf);
+//                                            });
+
+
+                                    return response.sendString(Mono.just("ok")).then();
+                                }
+                        ))
                 .bindNow()
                 .onDispose()
-                .block(); // Starts the server in a blocking fashion, and waits for it to finish its initialization
-
-
+                .block();
     }
 }

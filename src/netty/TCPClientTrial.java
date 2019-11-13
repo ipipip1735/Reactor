@@ -24,30 +24,14 @@ public class TCPClientTrial {
 
         TCPClientTrial tcpClient = new TCPClientTrial();
 
-//        tcpClient.urlConn();
         tcpClient.conn();
-//        tcpClient.receive();
-    }
 
-    private void receive() {
 
-        Connection connection =
-                TcpClient.create()
-                        .host("example.com")
-                        .port(80)
-                        .doOnConnect(conn -> {
-                            System.out.println("~~conn~~");
-//                            conn.
-                        })
-                        .handle((inbound, outbound) -> inbound.receive().then())
-                        .connectNow();
-
-        connection.onDispose()
-                .block();
     }
 
     private void conn() {
 
+        //方式一
         Connection connection = TcpClient.create()
                 .host(ip)
                 .port(port)
@@ -69,22 +53,24 @@ public class TCPClientTrial {
                 .block();
 
 
-    }
 
-    private void urlConn() {
-        try {
-            URLConnection urlConnection = new URL("http://localhost:8080").openConnection();
-            InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-            System.out.println(inputStream.available());
 
-//            byte[] bytes = new byte[inputStream.available()];
-//            while (inputStream.read() != -1) {
-//                System.out.println(new String(bytes));
-//            }
+        //方式二
+//        Connection connection =
+//                TcpClient.create()
+//                        .host(ip)
+//                        .port(port)
+//                        .handle((inbound, outbound) ->
+//                                outbound.sendString(Mono.just("OK"))
+//                                        .then(inbound.receive()
+//                                                .asString()
+//                                                .doOnNext(System.out::println)
+//                                                .then())
+//                        )
+//                        .connectNow();
+//        connection.onDispose()
+//                .block();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
 

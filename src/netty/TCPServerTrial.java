@@ -22,6 +22,7 @@ import reactor.netty.resources.LoopResources;
 import reactor.netty.tcp.TcpServer;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.util.CharsetUtil.UTF_8;
@@ -171,8 +172,9 @@ public class TCPServerTrial {
                                 .asString()
                                 .flatMap(s -> {
                                     System.out.println(s);
-                                    return outbound.sendString(Mono.just("[server]" + s));
-                                }))
+                                    return outbound.sendString(Flux.just("11", "22")
+                                            .delayElements(Duration.ofMillis(2000)));
+                                }).then())
                 .bindNow();
 
         server.onDispose()

@@ -17,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.LongConsumer;
+import java.util.logging.Level;
 
 import static java.time.Duration.ofSeconds;
 
@@ -28,11 +29,13 @@ public class FluxTrial {
     public static void main(String[] args) {
         FluxTrial fluxTrial = new FluxTrial();
 
-        fluxTrial.create();//创建多值流
+//        fluxTrial.create();//创建多值流
 //        fluxTrial.from();//创建多值流
 //        fluxTrial.push();//创建多值流
 //        fluxTrial.generate();//创建无限流
 //        fluxTrial.never();//创建空流
+//        fluxTrial.then();//创建空流
+        fluxTrial.log();//创建空流
 //        fluxTrial.range();//创建流
 //        fluxTrial.just();//创建单值流
 
@@ -61,6 +64,22 @@ public class FluxTrial {
 
 
 //        fluxTrial.hooks();
+
+    }
+
+    private void log() {
+
+        Flux.just("one", "two", "three")
+                .log()
+                .log("oo", Level.INFO)
+                .subscribe(System.out::println);
+    }
+
+    private void then() {
+
+        Flux.just("one", "two", "three")
+                .then(Mono.just("end"))
+        .subscribe(System.out::println);
 
     }
 
