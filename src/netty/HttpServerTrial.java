@@ -17,26 +17,24 @@ public class HttpServerTrial {
 
     public static void main(String[] args) {
         HttpServerTrial httpServerTrial = new HttpServerTrial();
-//        httpServerTrial.request();
-        httpServerTrial.response();
+        httpServerTrial.request();
+//        httpServerTrial.response();
     }
 
     private void response() {
 
         HttpServer.create()
-                .host(host)
+                .host(ip)
                 .port(port)
                 .route(httpServerRoutes ->
                     httpServerRoutes.get("/test/{p}", (request, response) -> {
-
-
 
                         return response.addCookie(new DefaultCookie("xx", "yy"))
                         .addHeader("xx", "yy")
                         .chunkedTransfer(true)
                         .compression(true)
                         .keepAlive(true)
-                        .sendString(Mono.just("ok")).then();
+                        .sendString(Mono.just("tt")).then();
                     })
                 )
                 .bindNow()
@@ -49,8 +47,8 @@ public class HttpServerTrial {
     private void request() {
 
         HttpServer.create()
-                .host(host)
-//                .host(ip)
+//                .host(host)
+                .host(ip)
                 .port(port)
                 .route(routes ->
                         routes.get("/test/{param}", (request, response) -> {
