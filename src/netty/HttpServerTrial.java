@@ -92,11 +92,11 @@ public class HttpServerTrial {
                                                 System.out.println(byteBuf);
                                             });
 
-                                    request.receiveObject()
-                                            .doOnNext(byteBuf -> {
-                                                System.out.println("~~doOnNext~~");
-                                                System.out.println(byteBuf);
-                                            });
+//                                    request.receiveObject()
+//                                            .doOnNext(byteBuf -> {
+//                                                System.out.println("~~doOnNext~~");
+//                                                System.out.println(byteBuf);
+//                                            });
 
 
 
