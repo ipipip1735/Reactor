@@ -27,21 +27,19 @@ public class HttpServerTrial {
                 .host(ip)
                 .port(port)
                 .route(httpServerRoutes ->
-                    httpServerRoutes.get("/test/{p}", (request, response) -> {
+                        httpServerRoutes.get("/test/{p}", (request, response) -> {
 
-                        return response.addCookie(new DefaultCookie("xx", "yy"))
-                        .addHeader("xx", "yy")
-                        .chunkedTransfer(true)
-                        .compression(true)
-                        .keepAlive(true)
-                        .sendString(Mono.just("tt")).then();
-                    })
+                            return response.addCookie(new DefaultCookie("xx", "yy"))
+                                    .addHeader("xx", "yy")
+                                    .chunkedTransfer(true)
+                                    .compression(true)
+                                    .keepAlive(true)
+                                    .sendString(Mono.just("tt")).then();
+                        })
                 )
                 .bindNow()
                 .onDispose()
                 .block();
-
-
     }
 
     private void request() {
@@ -82,24 +80,24 @@ public class HttpServerTrial {
 
                                     request.withConnection(connection -> {
                                         System.out.println("connection is " + connection);
-                                        connection.addHandlerLast(null);
+//                                        connection.addHandlerLast(null);//增加处理器到管线
                                     });
 
 
                                     System.out.println("-------------");
 
-                                    request.receive()
+                                    return request.receive()
                                             .doOnNext(byteBuf -> {
-                                                System.out.println("~~doOnNext~~");
+                                                System.out.println("~~doOnNext~R~");
                                                 System.out.println(byteBuf);
-                                            });
 
-//                                    request.receiveObject()
+                                            }).then(response.sendString(Mono.just("post ok")).then());
+
+//                                  return  request.receiveObject()
 //                                            .doOnNext(byteBuf -> {
 //                                                System.out.println("~~doOnNext~~");
 //                                                System.out.println(byteBuf);
 //                                            });
-                                    return response.sendString(Mono.just("post ok")).then();
                                 }
                         ))
                 .bindNow()
@@ -159,7 +157,6 @@ public class HttpServerTrial {
 //                                                System.out.println("~~doOnNext~~");
 //                                                System.out.println(byteBuf);
 //                                            });
-//
 //
 //
 //                                    return response.sendString(Mono.just("ok")).then();

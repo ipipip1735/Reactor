@@ -38,20 +38,17 @@ public class HttpClientTrial {
 
     private void request() {
 
-
         HttpClient.create()
                 .post()
                 .uri(uri)
                 .send(Mono.just(Unpooled.wrappedBuffer("OOO".getBytes())))
                 .response((httpClientResponse, byteBufFlux) -> {
-                    System.out.println(httpClientResponse.status());
+                    System.out.println("status is " + httpClientResponse.status());
                     return byteBufFlux.asString();
                 })
                 .doOnNext(System.out::println)
                 .then()
                 .block();
-
-
     }
 
     private void connection() {
@@ -197,7 +194,7 @@ public class HttpClientTrial {
                 .get()
                 .uri(uri)
                 .response((httpClientResponse, byteBufMono) -> {
-                    System.out.println("~~responseSingle~~");
+                    System.out.println("~~response~~");
                     System.out.println(httpClientResponse);
                     System.out.println(httpClientResponse.status());
                     System.out.println(httpClientResponse.responseHeaders());
@@ -210,20 +207,20 @@ public class HttpClientTrial {
 
 
         //方式二：获取单值
-        HttpClient.create()
-                .get()
-                .uri(uri)
-                .responseSingle((httpClientResponse, byteBufMono) -> {
-                    System.out.println("~~responseSingle~~");
-                    System.out.println(httpClientResponse);
-                    System.out.println(httpClientResponse.status());
-                    System.out.println(httpClientResponse.responseHeaders());
-
-                    return byteBufMono.asString();
-                })
-                .doOnNext(System.out::println)
-                .then()
-                .block();
+//        HttpClient.create()
+//                .get()
+//                .uri(uri)
+//                .responseSingle((httpClientResponse, byteBufMono) -> {
+//                    System.out.println("~~responseSingle~~");
+//                    System.out.println(httpClientResponse);
+//                    System.out.println(httpClientResponse.status());
+//                    System.out.println(httpClientResponse.responseHeaders());
+//
+//                    return byteBufMono.asString();
+//                })
+//                .doOnNext(System.out::println)
+//                .then()
+//                .block();
     }
 
     private void config() {

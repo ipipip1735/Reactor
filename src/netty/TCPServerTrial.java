@@ -164,7 +164,7 @@ public class TCPServerTrial {
 //                .block();
 
         //方式二
-        DisposableServer server = TcpServer.create()
+        TcpServer.create()
                 .host(ip)
                 .port(port)
                 .handle((inbound, outbound) ->
@@ -173,11 +173,10 @@ public class TCPServerTrial {
                                 .flatMap(s -> {
                                     System.out.println(s);
                                     return outbound.sendString(Flux.just("11", "22")
-                                            .delayElements(Duration.ofMillis(2000)));
+                                            .delayElements(Duration.ofMillis(500)));
                                 }).then())
-                .bindNow();
-
-        server.onDispose()
+                .bindNow()
+                .onDispose()
                 .block();
     }
 
@@ -200,18 +199,17 @@ public class TCPServerTrial {
 //                .block();
 
         //方法二：直接读取字符串
-//        DisposableServer server = TcpServer.create()
-//                .host(ip)
-//                .port(port)
-//                .handle((inbound, outbound) ->
-//                        inbound.receive()
-//                                .asString()//转换为字符串
-//                                .doOnNext( System.out::println)
-//                                .then())
-//                .bindNow();
-//
-//        server.onDispose()
-//                .block();
+        DisposableServer server = TcpServer.create()
+                .host(ip)
+                .port(port)
+                .handle((inbound, outbound) ->
+                        inbound.receive()
+                                .asString()//转换为字符串
+                                .doOnNext(System.out::println)
+                                .then())
+                .bindNow();
+        server.onDispose()
+                .block();
 
 
         //方式三：设置引用
