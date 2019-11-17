@@ -31,12 +31,27 @@ public class HttpClientTrial {
 //        httpClientTrial.response();
 //        httpClientTrial.hooks();
 
-        httpClientTrial.request();
-
+        httpClientTrial.get();
+//        httpClientTrial.post();
 
     }
 
-    private void request() {
+    private void get() {
+
+        HttpClient.create()
+                .get()
+                .uri(uri)
+                .responseContent()
+                .asString()
+                .doOnNext(s -> {
+                    System.out.println("~~doOnNext~~");
+                    System.out.println(s);
+                })
+                .then()
+                .block();
+    }
+
+    private void post() {
 
         HttpClient.create()
                 .post()
