@@ -34,8 +34,8 @@ public class FluxTrial {
 //        fluxTrial.push();//创建多值流
 //        fluxTrial.generate();//创建无限流
 //        fluxTrial.never();//创建空流
-//        fluxTrial.then();//创建空流
-        fluxTrial.log();//创建空流
+        fluxTrial.then();//创建空流
+//        fluxTrial.log();//创建空流
 //        fluxTrial.range();//创建流
 //        fluxTrial.just();//创建单值流
 
@@ -77,9 +77,37 @@ public class FluxTrial {
 
     private void then() {
 
+        //方式一
         Flux.just("one", "two", "three")
-                .then(Mono.just("end"))
-        .subscribe(System.out::println);
+                .doOnNext(s -> {
+                    System.out.println("~~doOnNext~~");
+                    System.out.println(s);
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                })
+                .then(Mono.just("Mono is end!"))
+                .subscribe(System.out::println);
+
+
+        //方式二
+//        String r = Flux.just("one", "two", "three")
+//                .subscribeOn(Schedulers.parallel()) //阻塞
+//                .doOnNext(s -> {
+//                    System.out.println("~~doOnNext~~");
+//                    System.out.println(s);
+//                    try {
+//                        Thread.sleep(1000L);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                })
+//                .then(Mono.just("Mono is end!"))
+//                .block();
+//        System.out.println(r);
+
 
     }
 

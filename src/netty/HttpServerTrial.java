@@ -27,31 +27,30 @@ public class HttpServerTrial {
                 .host(ip)
                 .port(port)
                 .route(httpServerRoutes ->
-                    httpServerRoutes.get("/test/{p}", (request, response) -> {
+                        httpServerRoutes.get("/test/{p}", (request, response) -> {
 
-                        return response.addCookie(new DefaultCookie("xx", "yy"))
-                        .addHeader("xx", "yy")
-                        .chunkedTransfer(true)
-                        .compression(true)
-                        .keepAlive(true)
-                        .sendString(Mono.just("tt")).then();
-                    })
+                            return response.addCookie(new DefaultCookie("xx", "yy"))
+                                    .addHeader("xx", "yy")
+                                    .chunkedTransfer(true)
+                                    .compression(true)
+                                    .keepAlive(true)
+                                    .sendString(Mono.just("tt")).then();
+                        })
                 )
                 .bindNow()
                 .onDispose()
                 .block();
-
-
     }
 
     private void request() {
 
+        //POST请求
         HttpServer.create()
 //                .host(host)
                 .host(ip)
                 .port(port)
                 .route(routes ->
-                        routes.get("/test/{param}", (request, response) -> {
+                        routes.post("/test/ddd", (request, response) -> {
 
                                     System.out.println("hostAddress is " + request.hostAddress());
                                     System.out.println("scheme is " + request.scheme());
@@ -81,30 +80,90 @@ public class HttpServerTrial {
 
                                     request.withConnection(connection -> {
                                         System.out.println("connection is " + connection);
+//                                        connection.addHandlerLast(null);//增加处理器到管线
                                     });
 
 
                                     System.out.println("-------------");
 
-                                    request.receive()
+                                    return request.receive()
                                             .doOnNext(byteBuf -> {
-                                                System.out.println("~~doOnNext~~");
+                                                System.out.println("~~doOnNext~R~");
                                                 System.out.println(byteBuf);
-                                            });
 
-//                                    request.receiveObject()
+                                            }).then(response.sendString(Mono.just("post ok")).then());
+
+//                                  return  request.receiveObject()
 //                                            .doOnNext(byteBuf -> {
 //                                                System.out.println("~~doOnNext~~");
 //                                                System.out.println(byteBuf);
 //                                            });
-
-
-
-                                    return response.sendString(Mono.just("ok")).then();
                                 }
                         ))
                 .bindNow()
                 .onDispose()
                 .block();
+
+
+        //GET请求
+//        HttpServer.create()
+////                .host(host)
+//                .host(ip)
+//                .port(port)
+//                .route(routes ->
+//                        routes.get("/test/{param}", (request, response) -> {
+//
+//                                    System.out.println("hostAddress is " + request.hostAddress());
+//                                    System.out.println("scheme is " + request.scheme());
+//                                    System.out.println("param is " + request.param("param"));
+//                                    System.out.println("remoteAddress is " + request.remoteAddress());
+//                                    System.out.println("requestHeaders is " + request.requestHeaders());
+//                                    System.out.println(request.params());
+//
+//                                    System.out.println("cookies is " + request.cookies());
+//                                    System.out.println("isKeepAlive is " + request.isKeepAlive());
+//                                    System.out.println("isWebsocket is " + request.isWebsocket());
+//                                    System.out.println("method is " + request.method());
+//                                    System.out.println("path is " + request.path());
+//                                    System.out.println("uri is " + request.uri());
+//                                    System.out.println("version is " + request.version());
+//
+//                                    System.out.println("-------------");
+//
+//                                    request.paramsResolver(s -> {
+//                                        System.out.println("paramsResolver is " + s);
+//                                        return new HashMap<>();
+//                                    });
+//
+//                                    request.receiveContent().doOnNext(httpContent -> {
+//                                        System.out.println("receiveContent is " + httpContent);
+//                                    });
+//
+//                                    request.withConnection(connection -> {
+//                                        System.out.println("connection is " + connection);
+//                                    });
+//
+//
+//                                    System.out.println("-------------");
+//
+//                                    request.receive()
+//                                            .doOnNext(byteBuf -> {
+//                                                System.out.println("~~doOnNext~~");
+//                                                System.out.println(byteBuf);
+//                                            });
+//
+//                                    request.receiveObject()
+//                                            .doOnNext(byteBuf -> {
+//                                                System.out.println("~~doOnNext~~");
+//                                                System.out.println(byteBuf);
+//                                            });
+//
+//
+//                                    return response.sendString(Mono.just("ok")).then();
+//                                }
+//                        ))
+//                .bindNow()
+//                .onDispose()
+//                .block();
     }
 }
