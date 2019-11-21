@@ -1,9 +1,12 @@
 package netty;
 
 import io.netty.handler.codec.http.cookie.DefaultCookie;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 /**
@@ -17,8 +20,88 @@ public class HttpServerTrial {
 
     public static void main(String[] args) {
         HttpServerTrial httpServerTrial = new HttpServerTrial();
-        httpServerTrial.request();
+//        httpServerTrial.request();
 //        httpServerTrial.response();
+
+//        httpServerTrial.handle();
+
+//        httpServerTrial.directory();
+        httpServerTrial.file();
+//        httpServerTrial.index();
+    }
+
+    private void index() {
+        HttpServer.create()
+                .host(ip)
+                .port(port)
+                .route(httpServerRoutes -> {
+                    httpServerRoutes
+                            .index((httpServerRequest, httpServerResponse) -> {
+                                System.out.println("~~index~~");
+                                System.out.println(httpServerRequest.requestHeaders());
+                                return httpServerResponse.sendString(Mono.just("AAA"));
+                            });
+                })
+                .bindNow()
+                .onDispose()
+                .block();
+
+
+    }
+
+    private void file() {
+        HttpServer.create()
+                .host(ip)
+                .port(port)
+                .route(httpServerRoutes -> {
+                    httpServerRoutes
+                            .file("/test", Paths.get("res/test"));
+                })
+                .bindNow()
+                .onDispose()
+                .block();
+    }
+
+    private void directory() {
+
+        HttpServer.create()
+                .host(ip)
+                .port(port)
+                .route(httpServerRoutes -> {
+                    httpServerRoutes
+                            .directory("/aa/bb", Paths.get("res"), httpServerResponse -> {
+                                System.out.println("~~directory~~");
+                                return httpServerResponse;
+                            });
+
+                })
+                .bindNow()
+                .onDispose()
+                .block();
+    }
+
+    private void handle() {
+
+        HttpServer.create()
+                .host(ip)
+                .port(port)
+                .handle((httpServerRequest, httpServerResponse) -> {
+                    System.out.println("~~handle~~");
+                    System.out.println(httpServerRequest.requestHeaders());
+                    httpServerRequest.requestHeaders().add("one", "111");
+                    return httpServerResponse.neverComplete();
+                })
+                .route(httpServerRoutes ->
+                        httpServerRoutes.get("/test", (httpServerRequest, httpServerResponse) -> {
+                            System.out.println("~~get~~");
+                            System.out.println(httpServerRequest.requestHeaders());
+
+                            return httpServerResponse.sendString(Mono.just("AAA"));
+                        }))
+                .bindNow()
+                .onDispose()
+                .block();
+
     }
 
     private void response() {
