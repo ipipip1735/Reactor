@@ -23,10 +23,10 @@ public class HttpServerTrial {
 //        httpServerTrial.request();
 //        httpServerTrial.response();
 
-//        httpServerTrial.handle();
+        httpServerTrial.handle();
 
 //        httpServerTrial.directory();
-        httpServerTrial.file();
+//        httpServerTrial.file();
 //        httpServerTrial.index();
     }
 
@@ -82,6 +82,7 @@ public class HttpServerTrial {
 
     private void handle() {
 
+        //方式一：最简使用
         HttpServer.create()
                 .host(ip)
                 .port(port)
@@ -89,18 +90,32 @@ public class HttpServerTrial {
                     System.out.println("~~handle~~");
                     System.out.println(httpServerRequest.requestHeaders());
                     httpServerRequest.requestHeaders().add("one", "111");
-                    return httpServerResponse.neverComplete();
+                    return httpServerResponse.sendString(Mono.just("HHH"));
                 })
-                .route(httpServerRoutes ->
-                        httpServerRoutes.get("/test", (httpServerRequest, httpServerResponse) -> {
-                            System.out.println("~~get~~");
-                            System.out.println(httpServerRequest.requestHeaders());
-
-                            return httpServerResponse.sendString(Mono.just("AAA"));
-                        }))
                 .bindNow()
                 .onDispose()
                 .block();
+
+        //方式二：配合路由一起使用（谁先增加，谁先调用）
+//        HttpServer.create()
+//                .host(ip)
+//                .port(port)
+//                .handle((httpServerRequest, httpServerResponse) -> {//增加处理器（无条件调用）
+//                    System.out.println("~~handle~~");
+//                    System.out.println(httpServerRequest.requestHeaders());
+//                    httpServerRequest.requestHeaders().add("one", "111");
+//                    return httpServerResponse.neverComplete();
+//                })
+//                .route(httpServerRoutes -> //增加路由处理器（URL匹配才调用）
+//                        httpServerRoutes.get("/test", (httpServerRequest, httpServerResponse) -> {
+//                            System.out.println("~~get~~");
+//                            System.out.println(httpServerRequest.requestHeaders());
+//
+//                            return httpServerResponse.sendString(Mono.just("AAA"));
+//                        }))
+//                .bindNow()
+//                .onDispose()
+//                .block();
 
     }
 
